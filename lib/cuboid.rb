@@ -1,13 +1,20 @@
 
 class Cuboid
 
+  InvalidOriginError = Class.new(StandardError)
+  InvalidDimensionsError = Class.new(StandardError)
+  InvalidMoveError = Class.new(StandardError)
+
+
   def initialize(params = {})
+    validate_params(params)
+
     @x = params[:x]
     @y = params[:y]
     @z = params[:z]
-    @length = params[:length].abs
-    @width = params[:width].abs
-    @height = params[:height].abs
+    @length = params[:length]
+    @width = params[:width]
+    @height = params[:height]
   end
 
   def vertices
@@ -27,13 +34,18 @@ class Cuboid
     @width * @height * @length
   end
 
+  # move cuboid origin and return new verticies unless new origin is invalid
   def move_to!(x, y, z)
+    raise InvalidMoveError if x < 0 || y < 0 || z < 0
+
     @x = x
     @y = y
     @z = z
+
+    vertices
   end
 
-  #returns true if the two cuboids intersect each other.  False otherwise.
+  # returns true if the two cuboids intersect each other.  False otherwise.
   def intersects?(other)
     if self.volume > other.volume
       smaller_cuboid = other
@@ -50,11 +62,21 @@ class Cuboid
     return false
   end
 
+  # detect if point is within origin and origin plus offset
   def point_inside?(x_other, y_other, z_other)
-    # detect if point is within origin and origin plus offset (also account for negative offset)
     (x_other >= @x && x_other <= @x + @width) &&
     (y_other >= @y && y_other <= @y + @height) &&
     (z_other >= @z && z_other <= @z + @length)
+  end
+
+  private
+
+  def validate_params(params)
+    if params[:x] < 0 || params[:y] < 0 || params[:z] < 0
+      raise InvalidOriginError
+    elsif params[:length] <= 0 || params[:width] <= 0 || params[:height] <= 0
+      raise InvalidDimensionsError
+    end
   end
 
 end
